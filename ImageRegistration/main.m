@@ -28,8 +28,8 @@ end
 u_x = reshape(idct2(reshape(theta_x, H, W)'), H, W, 1);
 u_y = reshape(idct2(reshape(theta_y, H, W)'), H, W, 1);
 u = cat(3, u_x, u_y);
+
 % moved = imwarp(fixed, u);
-% 
 % figure(2), imshow(moved);
 % legend("moved");
 % 
@@ -220,18 +220,6 @@ end
                  correspondingRowsOfDCTMatrix(1 : n_cv), u_y(1 : n_cv),...  
                  0.1, 0.2, H, W, zeros(p, 1)); 
 
-
-% L1-HTP approach
-% [theta_x_hat, used_learning_rate_x] = L1HTP(...
-%                  correspondingRowsOfDCTMatrix(n_cv + 1 : n_cv + m + n), u_x(n_cv + 1 : n_cv + m + n),...
-%                  correspondingRowsOfDCTMatrix(1 : n_cv), u_x(1 : n_cv),...
-%                  [1e-1, 1e-2, 1e-3, 1e-4], H, W, 20);  
-%  
-% [theta_y_hat, used_learning_rate_y] = L1HTP(...
-%                  correspondingRowsOfDCTMatrix(n_cv + 1 : n_cv + m + n), u_y(n_cv + 1 : n_cv + m + n),...
-%                  correspondingRowsOfDCTMatrix(1 : n_cv), u_y(1 : n_cv),...  
-%                  [1e-1, 1e-2, 1e-3, 1e-4], H, W, 20);  
-
 u_x_hat = reshape(idct2(reshape(theta_x_hat, H, W)'), H, W, 1);
 u_y_hat = reshape(idct2(reshape(theta_y_hat, H, W)'), H, W, 1);
 u_hat = cat(3, u_x_hat, u_y_hat);
@@ -249,7 +237,6 @@ nexttile, stem(z_y_hat), title("z\_y\_hat");
 
 imageReconstructionError = meanNormalizedError(moved, reconstructedMoved)
 motionFieldReconstructionError = meanNormalizedError(u, u_hat)
-
 
 
 

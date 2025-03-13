@@ -37,7 +37,7 @@ def addNoise(y, noiseFrac):
     noise_std = noiseFrac * np.mean(np.abs(y))
     noise = np.random.normal(0, noise_std, size = (N, 1))
     noisy_y = y + noise
-    return noisy_y
+    return noisy_y, noise_std
 
 def meanNormalizedError(x, xhat):
     '''
@@ -101,7 +101,7 @@ def ARLASSO_without_constraint(A, y, A_cv, y_cv, m, r1 = None, r2 = None):
         print("Choose lambda1 properly")
     if usedlambda2 <= 0.004 or usedlambda2 >= 0.870:
         print("Choose lambda2 properly")
-    return xhat, usedlambda1, usedlambda2
+    return xhat, usedlambda1, usedlambda2, t
 
 def ARLASSO_with_constraint(A, y, A_cv, y_cv, m, r1 = None, r2 = None):
     '''
@@ -489,6 +489,48 @@ def only_priors(A, y, A_cv, y_cv, m, r1 = None):
         print("Choose lambda1 properly")
 
     return xhat, usedlambda1
+
+def BayesianLearning(phi, y, sigma):
+    p = phi.shape[1]
+    Tau = np.eye(p)
+    mu, mu_prev = None, None
+    iteration = 0
+
+    while (iteration <= 1) or (np.linalg.norm(mu - mu_prev) >= 0.0001):
+        mu_prev = np.copy(mu)
+        mu = (1/sigma) * (1/sigma) * np.matmul(np.linalg.inv((1/sigma) * (1/sigma) * np.matmul(phi.T, phi) + np.linalg.inv(Tau)), phi.T @ y)
+        Sigma = np.linalg.inv((1/sigma) * (1/sigma) * np.matmul(phi.T, phi) + np.linalg.inv(Tau))
+        Tau = np.zeros(shape = (p, p))
+        for i in range(p):
+            Tau[i, i] = mu[i, 0] * mu[i, 0] + Sigma[i, i] 
+
+        # if iteration > 0: 
+            # print(np.linalg.norm(mu - mu_prev))
+        iteration += 1
+
+    return mu 
+
+def SBL(A, y, A_cv, y_cv, m, sigma):
+    
+    A1 = A[:m].copy()
+    y1 = y[:m].copy()
+
+    A2 = A[m:].copy()
+    y2 = y[m:].copy()
+
+    p = A.shape[1]
+    n = A2.shape[0]
+    crossValidationMesCount = A_cv.shape[0]  
+
+    A1 = np.concatenate((A_cv, A1), axis = 0)
+
+    # print(y.shape, y_cv.shape)
+    y = np.concatenate((y_cv, y), axis = 0)
+
+    W = np.concatenate((np.concatenate((A1, np.zeros((m + crossValidationMesCount, n))), axis = 1), np.concatenate((A2, np.eye(n)), axis = 1)), axis = 0)
+    # print(W.shape, y.shape)
+    res = BayesianLearning(W, y, sigma)
+    return res[:p, :]
 
 
 

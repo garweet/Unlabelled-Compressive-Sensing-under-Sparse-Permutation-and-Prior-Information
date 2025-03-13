@@ -5,7 +5,7 @@ import random
 np.random.seed(90)
 random.seed(90)
 
-noOfPermutations = 8                                            # number of permutation
+noOfPermutations = 32                                     # change this accordingly 
 fileName = str(noOfPermutations)
 cvMeasurements = 5
 m = 32                                                    # number of known correspondences
@@ -21,9 +21,9 @@ A_cv =  np.load("A_cv_fixed.npy")
 y_cv = addNoise(A_cv @ x, noiseFraction)     
     
 for permutationRun in range(permutationRuns):
-    P = sparsePermutation(N, m, noOfPermutations)
+    P = sparsePermutation(N, noOfPermutations, permutationRun)
     noiseLess_y = P @ A @ x
-    print(noiseLess_y[105:, :])
+    # print(noiseLess_y[105:, :])
     z_true = noiseLess_y - A @ x
     max_abs_z = np.max(np.abs(z_true))
     sum_abs_z = np.sum(np.abs(z_true))
@@ -39,10 +39,10 @@ for permutationRun in range(permutationRuns):
         print("Permutation run {}, Noisy run: {}".format(permutationRun, noiseRun))
         noisy_y = addNoise(noiseLess_y, noiseFraction)
 
-        xhat_ARLASSO_with_constraint, l1_ARLASSO_with_constraint, l2_ARLASSO_with_constraint, _ = ARLASSO_with_constraint(A, noisy_y, A_cv, y_cv, m, lambda1_ARLASSO_with_constraint, lambda2_ARLASSO_with_constraint)
-        xhat_ARLASSO_without_constraint, l1_ARLASSO_without_constraint, l2_ARLASSO_without_constraint, _ = ARLASSO_without_constraint(A, noisy_y, A_cv, y_cv, m, lambda1_ARLASSO_without_constraint, lambda2_ARLASSO_without_constraint)
-        xhat_RLASSO_with_constraint, l1_RLASSO_with_constraint, l2_RLASSO_with_constraint, _ = RLASSO_with_constraint(A, noisy_y, A_cv, y_cv, lambda1_RLASSO_with_constraint, lambda2_RLASSO_with_constraint)
-        xhat_RLASSO_without_constraint, l1_RASSO_without_constraint, l2_RLASSO_without_constraint, _ = RLASSO_without_constraint(A, noisy_y, A_cv, y_cv, lambda1_RLASSO_without_constraint, lambda2_RLASSO_without_constraint)
+        xhat_ARLASSO_with_constraint, lambda1_ARLASSO_with_constraint, lambda2_ARLASSO_with_constraint, _ = ARLASSO_with_constraint(A, noisy_y, A_cv, y_cv, m, lambda1_ARLASSO_with_constraint, lambda2_ARLASSO_with_constraint)
+        xhat_ARLASSO_without_constraint, lambda1_ARLASSO_without_constraint, lambda2_ARLASSO_without_constraint, _ = ARLASSO_without_constraint(A, noisy_y, A_cv, y_cv, m, lambda1_ARLASSO_without_constraint, lambda2_ARLASSO_without_constraint)
+        xhat_RLASSO_with_constraint, lambda1_RLASSO_with_constraint, lambda2_RLASSO_with_constraint, _ = RLASSO_with_constraint(A, noisy_y, A_cv, y_cv, lambda1_RLASSO_with_constraint, lambda2_RLASSO_with_constraint)
+        xhat_RLASSO_without_constraint, lambda1_RLASSO_without_constraint, lambda2_RLASSO_without_constraint, _ = RLASSO_without_constraint(A, noisy_y, A_cv, y_cv, lambda1_RLASSO_without_constraint, lambda2_RLASSO_without_constraint)
         xhat_L1_HTP, _ = L1_HTP(A, noisy_y, A_cv, y_cv)
         xhat_L2_HTP, _ = L2_HTP(A, noisy_y, A_cv, y_cv, m)
         xhat_L1L1, lambda_L1L1 = L1L1(A, noisy_y, A_cv, y_cv, lambda_L1L1)
@@ -55,10 +55,11 @@ for permutationRun in range(permutationRuns):
         sMetrics[permutationRun][noiseRun][4] = meanNormalizedError(x, xhat_L1_HTP)
         sMetrics[permutationRun][noiseRun][5] = meanNormalizedError(x, xhat_L1L1)
         sMetrics[permutationRun][noiseRun][6] = meanNormalizedError(x, xhat_only_priors)
-        sMetrics[permutationRun][noiseRun][7] = meanNormalizedError(x, xhat_only_priors)
+        sMetrics[permutationRun][noiseRun][7] = meanNormalizedError(x, xhat_L2_HTP)
         sMetrics[permutationRun][noiseRun][8] = sum_abs_z
            
         print(sMetrics[permutationRun][noiseRun][0], sMetrics[permutationRun][noiseRun][1], sMetrics[permutationRun][noiseRun][2], sMetrics[permutationRun][noiseRun][3], sMetrics[permutationRun][noiseRun][4], sMetrics[permutationRun][noiseRun][5], sMetrics[permutationRun][noiseRun][6], sMetrics[permutationRun][noiseRun][7], sMetrics[permutationRun][noiseRun][8])
-
+        # print(np.load("s_Metrics" + fileName + ".npy")[permutationRun][noiseRun] - sMetrics[permutationRun][noiseRun])
+        
 np.save('s_Metrics' + fileName + '.npy', sMetrics)
 print("Program finished successfully.")
